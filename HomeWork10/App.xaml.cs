@@ -16,8 +16,8 @@ namespace HomeWork10
     class TelegramMessageClient
     {
         private MainWindow w;
-        static string fileName = @"C:\Users\Артемий\Desktop\History.txt";
-        static string path = @"C:\Users\Артемий\Desktop\token.txt";
+        static string fileName = @"Your fileName";
+        static string path = @"Your path";
         private ITelegramBotClient bot = new TelegramBotClient(File.ReadAllText(path));
         public ObservableCollection<MessageLog> BotMessageLog { get; set; }
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
