@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using File = System.IO.File;
 
 namespace HomeWork10
@@ -14,21 +16,33 @@ namespace HomeWork10
     class TelegramMessageClient
     {
         private MainWindow w;
+        static string fileName = @"C:\Users\Артемий\Desktop\History.txt";
         static string path = @"C:\Users\Артемий\Desktop\token.txt";
         private ITelegramBotClient bot = new TelegramBotClient(File.ReadAllText(path));
         public ObservableCollection<MessageLog> BotMessageLog { get; set; }
-        public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(update));
 
-            if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
+            if (update.Type == UpdateType.Message)
             {
                 var message = update.Message;
+                string s = message.Text; 
+                WriteToFile(fileName, s);
                 string text = $"{DateTime.Now.ToLongTimeString()}: {message.Chat.FirstName} {message.Chat.Id} {message.Text}";
                 Debug.WriteLine($"{text} TypeMessage: {message.Type}");
                 if (message.Text == null)
                 {
-                    return Task.CompletedTask;
+                    return;
+                }
+                if(message.Text == "Show history")
+                {
+                    string[] history = ReadArrayFromFile(fileName);
+                    foreach (string historyItem in history)
+                    {
+                        await bot.SendTextMessageAsync(message.Chat.Id, historyItem);
+                    }
+                    return;
                 }
                 var messageText = message.Text;
                 w.Dispatcher.Invoke(() =>
@@ -40,10 +54,23 @@ namespace HomeWork10
                         ));
                 });
             }
-
-            return Task.CompletedTask;
+            return;
         }
-
+        public static void WriteToFile(string fileName,string s)
+        {
+            File.AppendAllText(fileName, s + "\n");
+        }
+        public static string[] ReadArrayFromFile(string fileName)
+        {
+            if (File.Exists(fileName))
+            {
+                return File.ReadAllLines(fileName);
+            }
+            else
+            {
+                return new string[0];
+            }
+        }
         public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
             Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(exception));
